@@ -139,6 +139,7 @@ credentials/*.txt
 credentials/token.json
 credentials/google_credentials.json
 credentials/weather_config.json
+credentials/app_config.json
 
 # Logs
 *.log

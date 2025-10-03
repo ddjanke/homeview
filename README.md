@@ -45,7 +45,22 @@ cd homeview
    pip install -r requirements.txt
    ```
 
-3. **Set up Google API credentials**
+3. **Set up application configuration**
+   ```bash
+   # Copy the example configuration file
+   cp credentials/app_config.json.example credentials/app_config.json
+   
+   # Edit with your API keys and IDs
+   nano credentials/app_config.json
+   ```
+   
+   **Required configuration:**
+   - `weather_api_key`: Get from [OpenWeatherMap](https://openweathermap.org/api)
+   - `google_sheets_id`: Your Google Sheets document ID
+   - `google_drive_icons_folder_id`: Google Drive folder ID for chore icons
+   - `weather_location`: Your city's latitude, longitude, and name
+
+4. **Set up Google API credentials**
    ```bash
    # Copy the example file
    cp credentials/google_credentials.json.example credentials/google_credentials.json
@@ -54,7 +69,7 @@ cd homeview
    nano credentials/google_credentials.json
    ```
 
-4. **Set up Weather API**
+5. **Set up Weather API**
    ```bash
    # Copy the example file
    cp credentials/weather_config.json.example credentials/weather_config.json
