@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HomeView{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <!-- HomeView Title (Top Left) - Clickable Theme Toggle -->
+            <div class="app-title">
+                <h1 id="theme-toggle" class="theme-toggle-logo" title="Click to toggle Dark/Light Theme">
+                    <i class="fas fa-home"></i> HomeView
+                </h1>
+            </div>
+
+            <!-- Centered Time -->
+            <div class="time-display">
+                <div id="current-time">--:--</div>
+                <div id="current-date">--</div>
+            </div>
+
+            <!-- Weather Widget (Top Right) -->
+            <div class="weather-widget" id="weather-widget">
+                <div class="weather-icon">
+                    <i class="fas fa-cloud-sun"></i>
+                </div>
+                <div class="weather-info">
+                    <div class="weather-temp">--°</div>
+                    <div class="weather-desc">Loading...</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-tab="calendar">
+                <i class="fas fa-calendar-week"></i>
+                <span>Calendar</span>
+            </button>
+            <button class="nav-btn" data-tab="chores">
+                <i class="fas fa-tasks"></i>
+                <span>Chores</span>
+            </button>
+            <button class="nav-btn" data-tab="todos">
+                <i class="fas fa-list-check"></i>
+                <span>Todos</span>
+            </button>
+            <button class="nav-btn" data-tab="weather">
+                <i class="fas fa-cloud-sun"></i>
+                <span>Weather</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Hold-to-Complete Button -->
+    <div id="hold-button" class="hold-button hidden">
+        <span class="hold-text">Hold to Complete</span>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <span>Loading...</span>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/hold-to-complete.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

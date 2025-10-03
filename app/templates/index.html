@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}HomeView - Home Management{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h2>Welcome to HomeView</h2>
+        <p>Your family's central command center</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card" data-tab="calendar">
+            <div class="card-icon">
+                <i class="fas fa-calendar-week"></i>
+            </div>
+            <div class="card-content">
+                <h3>Calendar</h3>
+                <p>View your family's weekly schedule</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card" data-tab="chores">
+            <div class="card-icon">
+                <i class="fas fa-tasks"></i>
+            </div>
+            <div class="card-content">
+                <h3>Chores</h3>
+                <p>Track and manage family chores</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card" data-tab="todos">
+            <div class="card-icon">
+                <i class="fas fa-list-check"></i>
+            </div>
+            <div class="card-content">
+                <h3>Todos</h3>
+                <p>Manage your priority tasks</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card" data-tab="weather">
+            <div class="card-icon">
+                <i class="fas fa-cloud-sun"></i>
+            </div>
+            <div class="card-content">
+                <h3>Weather</h3>
+                <p>Check current conditions and forecast</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-footer">
+        <div class="quick-stats">
+            <div class="stat-item">
+                <span class="stat-label">System Status:</span>
+                <span class="stat-value online">Online</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Last Sync:</span>
+                <span class="stat-value" id="last-sync">Never</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- JavaScript is handled in app.js -->
+{% endblock %}

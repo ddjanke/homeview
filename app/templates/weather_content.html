@@ -1,0 +1,51 @@
+<div class="weather-container">
+    <div class="weather-header">
+        <h2>Weather Information</h2>
+        <button id="refresh-weather" class="action-btn">
+            <i class="fas fa-sync-alt"></i>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Current Weather -->
+    <div class="current-weather" id="current-weather">
+        <div class="weather-main">
+            <div class="weather-icon" id="weather-icon">
+                <i class="fas fa-sun"></i>
+            </div>
+            <div class="weather-temp" id="weather-temp">--°F</div>
+            <div class="weather-condition" id="weather-condition">Loading...</div>
+        </div>
+        <div class="weather-details">
+            <div class="weather-detail">
+                <i class="fas fa-tint"></i>
+                <span id="humidity">--%</span>
+            </div>
+            <div class="weather-detail">
+                <i class="fas fa-wind"></i>
+                <span id="wind-speed">-- mph</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Alerts -->
+    <div class="weather-alerts" id="weather-alerts" style="display: none;">
+        <h3>Weather Alerts</h3>
+        <div class="alerts-list" id="alerts-list"></div>
+    </div>
+
+    <!-- 5-Day Forecast -->
+    <div class="forecast-container">
+        <h3>5-Day Forecast</h3>
+        <div class="forecast-grid" id="forecast-grid">
+            <!-- Forecast items will be loaded here -->
+        </div>
+    </div>
+
+    <div class="weather-footer">
+        <div class="last-updated" id="last-updated">
+            Last updated: Never
+        </div>
+    </div>
+</div>
+

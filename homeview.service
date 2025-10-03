@@ -1,0 +1,31 @@
+[Unit]
+Description=Homeview Flask Application
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/homeview
+Environment=PATH=/home/pi/homeview/venv/bin
+Environment=PYTHONPATH=/home/pi/homeview
+ExecStart=/home/pi/homeview/venv/bin/gunicorn --bind 127.0.0.1:5000 --workers 1 --timeout 120 --max-requests 1000 --max-requests-jitter 100 run:app
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=homeview
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/pi/homeview
+ReadWritePaths=/home/pi/homeview/instance
+
+[Install]
+WantedBy=multi-user.target
+

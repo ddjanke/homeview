@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Homeview Kiosk
+Comment=Homeview Application in Kiosk Mode
+Exec=/home/pi/homeview/kiosk_launcher.sh
+Icon=midori
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=10
+

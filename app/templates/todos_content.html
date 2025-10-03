@@ -1,0 +1,31 @@
+<div class="todos-container" id="todos-container">
+    <div class="todos-header">
+        <h2>To-Do List</h2>
+        <div class="todos-actions">
+            <button id="sync-todos" class="action-btn">
+                <i class="fas fa-sync-alt"></i>
+                Sync from Sheets
+            </button>
+            <button id="add-todo" class="action-btn">
+                <i class="fas fa-plus"></i>
+                Add Todo
+            </button>
+        </div>
+    </div>
+    
+    <div id="todos-content">
+        <!-- Todos data will be loaded here -->
+    </div>
+    
+    <div class="hold-instructions">
+        <div class="hold-button" id="hold-button">
+            <i class="fas fa-check"></i>
+            <span class="hold-text">Hold to Complete</span>
+        </div>
+        <div class="instructions">
+            Hold the button and tap todos to mark them complete
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript is handled in app.js -->
