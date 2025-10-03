@@ -11,7 +11,19 @@ A touch-friendly web application designed for Raspberry Pi Zero W that helps fam
 - **📱 Touch-Friendly**: Optimized for large touch screens
 - **🔒 Safety**: Hold-to-complete interactions prevent accidental touches
 
-## Quick Start
+## 🚀 Quick Start
+
+### GitHub Repository
+
+This project is available on GitHub for easy cloning and collaboration:
+
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/homeview.git
+cd homeview
+
+# Follow the setup instructions below
+```
 
 ### Prerequisites
 
