@@ -12,6 +12,7 @@
     
     --background-color: #ffffff;
     --surface-color: #f5f5f5;
+    --tile-color: #f0f0f0;
     --text-primary: #212121;
     --text-secondary: #757575;
     --text-disabled: #BDBDBD;
@@ -28,6 +29,7 @@
 [data-theme="dark"] {
     --background-color: #121212;
     --surface-color: #1e1e1e;
+    --tile-color: #404040;
     --text-primary: #ffffff;
     --text-secondary: #b3b3b3;
     --text-disabled: #666666;
@@ -264,7 +266,7 @@ body {
 }
 
 .dashboard-card {
-    background: var(--surface-color);
+    background: var(--tile-color);
     border-radius: var(--border-radius);
     padding: 2rem;
     box-shadow: var(--shadow);
@@ -338,7 +340,7 @@ body {
 }
 
 .calendar-day {
-    background: var(--surface-color);
+    background: var(--tile-color);
     border-radius: var(--border-radius);
     padding: 1rem;
     box-shadow: var(--shadow);
@@ -362,6 +364,10 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     transition: all 0.2s ease;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
 }
 
 .calendar-event:hover {
@@ -385,6 +391,26 @@ body {
     font-weight: bold;
     font-size: 0.8rem;
     margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.event-start-time {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.event-end-time {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    padding-top: 0.25rem;
+    margin-top: 0.5rem;
 }
 
 .event-title {
@@ -452,6 +478,26 @@ body {
 .event-time {
     font-weight: 600;
     font-size: 0.8rem;
+    line-height: 1.2;
+}
+
+.event-start-time {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.event-end-time {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    padding-top: 0.25rem;
+    margin-top: 0.5rem;
 }
 
 .event-title {
@@ -606,7 +652,7 @@ input:checked + .toggle-slider:before {
 }
 
 .chore-tile {
-    background: var(--background-color);
+    background: var(--tile-color);
     border: 2px solid #e0e0e0;
     border-radius: var(--border-radius);
     padding: 0.5rem;
@@ -630,9 +676,11 @@ input:checked + .toggle-slider:before {
 }
 
 .chore-tile.completed {
-    background: var(--success-color);
-    color: white;
-    border-color: var(--success-color);
+    background: var(--tile-color);
+    color: var(--text-color);
+    border-color: #e0e0e0;
+    opacity: 0.5;
+    text-decoration: line-through;
 }
 
 .chore-tile.update-mode {
@@ -757,7 +805,7 @@ input:checked + .toggle-slider:before {
     color: var(--text-primary);
     min-width: 120px;
     padding: 1rem;
-    background: var(--secondary-color);
+    background: var(--primary-color);
     color: white;
     border-radius: var(--border-radius);
     text-align: center;
@@ -778,7 +826,7 @@ input:checked + .toggle-slider:before {
 }
 
 .todo-item {
-    background: var(--surface-color);
+    background: var(--tile-color);
     border-radius: var(--border-radius);
     padding: 1.5rem;
     margin-bottom: 1rem;
@@ -1019,7 +1067,7 @@ input:checked + .toggle-slider:before {
 }
 
 .forecast-item {
-    background: var(--background-color);
+    background: var(--tile-color);
     border-radius: var(--border-radius);
     padding: 1.5rem;
     text-align: center;
@@ -1073,7 +1121,7 @@ input:checked + .toggle-slider:before {
 
 /* Update Controls */
 .update-controls {
-    background: var(--surface-color);
+    background: var(--tile-color);
     border-radius: var(--border-radius);
     padding: 2rem;
     box-shadow: var(--shadow);

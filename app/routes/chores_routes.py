@@ -60,18 +60,10 @@ def complete_chore(chore_id):
 
 @chores_bp.route("/api/chores/reset", methods=["POST"])
 def reset_chores():
-    """Reset chore completion status for the day."""
+    """Reset ALL chore completion status."""
     try:
-        # Get chores that need to be reset based on their frequency and day
-        today = datetime.now().weekday()  # 0 = Monday, 6 = Sunday
-        day_names = ["M", "Tu", "W", "Th", "F", "Sa", "Su"]
-        today_name = day_names[today]
-
-        chores_to_reset = Chore.query.filter(
-            (Chore.frequency == "daily")
-            | ((Chore.frequency == "weekly") & (Chore.day_of_week == today_name))
-            | ((Chore.frequency == "monthly") & (Chore.day_of_week == today_name))
-        ).all()
+        # Get ALL chores to reset
+        chores_to_reset = Chore.query.all()
 
         for chore in chores_to_reset:
             chore.reset_completion()

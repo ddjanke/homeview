@@ -129,3 +129,4 @@ The setup creates a production-ready kiosk installation optimized for Raspberry 
 
 
 
+

@@ -169,8 +169,13 @@ function initializeTabContent(tabName) {
             console.log('Weather cache lastLoaded:', tabCache.weather.lastLoaded);
             console.log('isDataFresh:', isDataFresh);
             if (isDataFresh && tabCache.weather.data) {
-                console.log('Using cached weather data');
-                displayWeatherData(tabCache.weather.data);
+                console.log('Using cached weather data - showing brief loading spinner');
+                showLoading();
+                // Show loading spinner briefly even for cached data
+                setTimeout(() => {
+                    displayWeatherData(tabCache.weather.data);
+                    hideLoading();
+                }, 500);
                 setupWeatherRefresh();
             } else {
                 console.log('Loading fresh weather data');
@@ -288,16 +293,24 @@ function initializeSystemStatus() {
 }
 
 function showLoading() {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.classList.remove('hidden');
+    console.log('showLoading called');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    console.log('Loading spinner element:', loadingSpinner);
+    if (loadingSpinner) {
+        console.log('Before removing hidden class:', loadingSpinner.classList.toString());
+        loadingSpinner.classList.remove('hidden');
+        console.log('After removing hidden class:', loadingSpinner.classList.toString());
+        console.log('Loading spinner shown');
+        console.log('Spinner computed style display:', window.getComputedStyle(loadingSpinner).display);
+    } else {
+        console.log('Loading spinner not found!');
     }
 }
 
 function hideLoading() {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('hidden');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    if (loadingSpinner) {
+        loadingSpinner.classList.add('hidden');
     }
 }
 
@@ -311,27 +324,27 @@ function showMessage(message) {
     alert(message);
 }
 
-// Global function to force hide loading overlay
+// Global function to force hide loading spinner
 window.forceHideLoading = function() {
-    console.log('Force hiding loading overlay');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.classList.add('hidden');
+    console.log('Force hiding loading spinner');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    if (loadingSpinner) {
+        loadingSpinner.classList.add('hidden');
     }
 };
 
-// Force hide loading overlay immediately on page load
+// Force hide loading spinner immediately on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - force hiding loading overlay');
+    console.log('DOM loaded - force hiding loading spinner');
     hideLoading();
 });
 
-// Auto-hide loading overlay after 3 seconds as a safety measure
+// Auto-hide loading spinner after 3 seconds as a safety measure
 setInterval(() => {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
-        console.log('Auto-hiding loading overlay after 3 seconds');
-        loadingOverlay.classList.add('hidden');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    if (loadingSpinner && !loadingSpinner.classList.contains('hidden')) {
+        console.log('Auto-hiding loading spinner after 3 seconds');
+        loadingSpinner.classList.add('hidden');
     }
 }, 3000);
 
@@ -407,8 +420,8 @@ function setupChoresRefresh() {
         });
     }
     
-    // Set up hold-to-complete functionality
-    initializeChoresHoldToComplete();
+    // Set up toggle-to-complete functionality
+    initializeChoresToggleToComplete();
     
     // Set up auto-refresh interval
     if (tabCache.chores.autoRefreshInterval) {
@@ -451,8 +464,8 @@ function setupTodosRefresh() {
         addBtn.addEventListener('click', addTodo);
     }
     
-    // Set up hold-to-complete functionality
-    initializeTodosHoldToComplete();
+    // Set up toggle-to-complete functionality
+    initializeTodosToggleToComplete();
     
     // Set up auto-refresh interval
     if (tabCache.todos.autoRefreshInterval) {
@@ -502,11 +515,12 @@ function loadWeatherData(forceRefresh = false) {
     
     // Check cache first unless forcing refresh
     if (!forceRefresh && tabCache.weather.data) {
-        console.log('Using cached weather data');
+        console.log('Using cached weather data - no loading spinner needed');
         displayWeatherData(tabCache.weather.data);
         return;
     }
     
+    console.log('Loading fresh weather data - showing spinner');
     showLoading();
     
     fetch('/weather/api/all')
@@ -774,15 +788,6 @@ function syncChores() {
     console.log('Syncing chores from Google Sheets');
     showLoading();
     
-    // Show a more specific loading message
-    const loadingOverlay = document.querySelector('.loading-overlay');
-    if (loadingOverlay) {
-        const loadingText = loadingOverlay.querySelector('.loading-text');
-        if (loadingText) {
-            loadingText.textContent = 'Syncing chores and downloading icons...';
-        }
-    }
-    
     // Create AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
@@ -836,7 +841,7 @@ function resetChores() {
             if (data.success) {
                 chores = data.chores || [];
                 displayChores();
-                showMessage('Chores reset successfully!');
+                showMessage('All chores reset successfully!');
             } else {
                 showError('Failed to reset chores: ' + (data.error || 'Unknown error'));
             }
@@ -854,16 +859,16 @@ function resetChores() {
 function getTodayChores() {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const todayName = dayNames[dayOfWeek];
     
     return chores.filter(chore => {
         // Show daily chores
-        if (chore.frequency === 'daily') {
+        if (chore.frequency.toLowerCase() === 'daily') {
             return true;
         }
         // Show weekly chores for today's day of week
-        if (chore.frequency === 'weekly' && chore.day_of_week === todayName) {
+        if (chore.frequency.toLowerCase() === 'weekly' && chore.day_of_week === todayName) {
             return true;
         }
         return false;
@@ -873,18 +878,18 @@ function getTodayChores() {
 function getAllChoresSorted() {
     const today = new Date();
     const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-    const dayNames = ['Su', 'M', 'Tu', 'W', 'Th', 'F', 'Sa'];
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     
     // Create a copy of chores and sort them
     const sortedChores = [...chores].sort((a, b) => {
         // First, sort by frequency (daily first, then weekly)
-        if (a.frequency !== b.frequency) {
-            if (a.frequency === 'daily') return -1;
-            if (b.frequency === 'daily') return 1;
+        if (a.frequency.toLowerCase() !== b.frequency.toLowerCase()) {
+            if (a.frequency.toLowerCase() === 'daily') return -1;
+            if (b.frequency.toLowerCase() === 'daily') return 1;
         }
         
         // For weekly chores, sort by day of week starting from today
-        if (a.frequency === 'weekly' && b.frequency === 'weekly') {
+        if (a.frequency.toLowerCase() === 'weekly' && b.frequency.toLowerCase() === 'weekly') {
             const aDayIndex = dayNames.indexOf(a.day_of_week);
             const bDayIndex = dayNames.indexOf(b.day_of_week);
             
@@ -938,7 +943,13 @@ function displayChores() {
     const showAll = showAllToggle ? showAllToggle.checked : false;
     
     // Filter chores based on toggle state
-    const filteredChores = showAll ? getAllChoresSorted() : getTodayChores();
+    let filteredChores = showAll ? getAllChoresSorted() : getTodayChores();
+    
+    // Sort chores: incomplete first, then completed (moved to end)
+    filteredChores.sort((a, b) => {
+        if (a.completed === b.completed) return 0;
+        return a.completed ? 1 : -1; // incomplete first
+    });
     
     // Group chores by person
     const choresByPerson = {};
@@ -978,6 +989,7 @@ function createPersonRow(person, personChores) {
 
 function createChoreTile(chore) {
     const completedClass = chore.completed ? 'completed' : '';
+    const completedStyle = chore.completed ? 'style="opacity: 0.5; text-decoration: line-through;"' : '';
     
     // Use icon if available, otherwise show default icon
     let iconHtml = '';
@@ -998,7 +1010,7 @@ function createChoreTile(chore) {
     }
     
     return `
-        <div class="chore-tile ${completedClass}" data-chore-id="${chore.id}">
+        <div class="chore-tile ${completedClass}" data-chore-id="${chore.id}" ${completedStyle}>
             ${iconHtml}
             <div class="chore-content">
                 <div class="chore-name">${chore.name}</div>
@@ -1008,16 +1020,23 @@ function createChoreTile(chore) {
 }
 
 function completeChore(choreId) {
+    console.log('completeChore called with ID:', choreId);
     const chore = chores.find(c => c.id === choreId);
-    if (!chore) return;
-    
-    showLoading();
-    
+    if (!chore) {
+        console.log('Chore not found with ID:', choreId);
+        return;
+    }
+
+    console.log('Found chore:', chore.name, 'Current completed status:', chore.completed);
+
     fetch(`/chores/api/chores/${choreId}/complete`, { method: 'POST' })
         .then(response => response.json())
         .then(data => {
+            console.log('API response:', data);
             if (data.success) {
                 chore.completed = !chore.completed;
+                chore.completed_date = chore.completed ? new Date().toISOString() : null;
+                console.log('Chore updated, new status:', chore.completed);
                 displayChores();
             } else {
                 showError('Failed to update chore: ' + (data.error || 'Unknown error'));
@@ -1026,9 +1045,6 @@ function completeChore(choreId) {
         .catch(error => {
             console.error('Error updating chore:', error);
             showError('Error updating chore: ' + error.message);
-        })
-        .finally(() => {
-            hideLoading();
         });
 }
 
@@ -1350,6 +1366,12 @@ function displayCalendar() {
     
     html += '</div>';
     container.innerHTML = html;
+    
+    // Refresh toggle targets after displaying chores
+    const toggleInstance = window.choresToggleInstance;
+    if (toggleInstance) {
+        toggleInstance.updateTargetList();
+    }
 }
 
 function createEventItem(event) {
@@ -1358,7 +1380,12 @@ function createEventItem(event) {
     const endTime = event.end?.dateTime || event.end_time;
     const title = event.summary || event.title || 'Untitled Event';
     const description = event.description || '';
-    const calendarName = event.calendar_name || 'Unknown Calendar';
+    let calendarName = event.calendar_name || 'Unknown Calendar';
+    
+    // Strip @gmail.com from calendar names
+    if (calendarName.includes('@gmail.com')) {
+        calendarName = calendarName.replace('@gmail.com', '');
+    }
     
     const startTimeStr = new Date(startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     const endTimeStr = new Date(endTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -1374,10 +1401,10 @@ function createEventItem(event) {
     
     return `
         <div class="${eventClass}" data-duration="${duration}">
-            <div class="event-time">${startTimeStr} - ${endTimeStr}</div>
+            <div class="event-start-time">${startTimeStr}</div>
             <div class="event-title">${title}</div>
             <div class="event-calendar">${calendarName}</div>
-            ${description ? `<div class="event-description">${description}</div>` : ''}
+            <div class="event-end-time">${endTimeStr}</div>
         </div>
     `;
 }
@@ -1411,17 +1438,20 @@ function setTheme(theme) {
     }
 }
 
-// Hold-to-complete functionality
-class HoldToComplete {
+// Toggle-to-complete functionality
+class ToggleToComplete {
     constructor(buttonSelector, targetSelector, options = {}) {
         this.button = document.querySelector(buttonSelector);
         this.targets = document.querySelectorAll(targetSelector);
         this.options = {
-            activeColor: '#2196F3',
+            activeColor: '#4CAF50',
+            inactiveColor: '#2196F3',
+            autoToggleOffDelay: 30000, // 30 seconds
             ...options
         };
         
-        this.isHolding = false;
+        this.isActive = false;
+        this.autoToggleTimer = null;
         
         this.init();
     }
@@ -1429,104 +1459,145 @@ class HoldToComplete {
     init() {
         if (!this.button) return;
         
-        // Add event listeners
-        this.button.addEventListener('mousedown', this.startHold.bind(this));
-        this.button.addEventListener('mouseup', this.endHold.bind(this));
-        this.button.addEventListener('mouseleave', this.endHold.bind(this));
+        // Add click event listener
+        this.button.addEventListener('click', this.toggle.bind(this));
         
-        // Touch events for mobile
-        this.button.addEventListener('touchstart', this.startHold.bind(this));
-        this.button.addEventListener('touchend', this.endHold.bind(this));
-        this.button.addEventListener('touchcancel', this.endHold.bind(this));
-        
-        // Prevent context menu on long press
-        this.button.addEventListener('contextmenu', (e) => e.preventDefault());
+        // Add event listeners for target clicks
+        this.setupTargetListeners();
     }
     
-    startHold(e) {
-        e.preventDefault();
+    toggle() {
+        console.log('Toggle button clicked, current state:', this.isActive);
+        this.isActive = !this.isActive;
+        console.log('New toggle state:', this.isActive);
         
-        if (this.isHolding) return;
+        this.updateButton();
+        this.updateTargets(this.isActive);
         
-        this.isHolding = true;
+        if (this.isActive) {
+            // Set auto-toggle-off timer
+            this.autoToggleTimer = setTimeout(() => {
+                this.isActive = false;
+                this.updateButton();
+                this.updateTargets(false);
+                this.autoToggleTimer = null;
+                console.log('Toggle mode auto-deactivated after 30 seconds');
+            }, this.options.autoToggleOffDelay);
+            console.log('Toggle mode activated - tap chores to complete them');
+        } else {
+            // Clear timer if manually toggled off
+            if (this.autoToggleTimer) {
+                clearTimeout(this.autoToggleTimer);
+                this.autoToggleTimer = null;
+            }
+            console.log('Toggle mode deactivated');
+        }
         
-        // Visual feedback - button becomes active
-        this.button.classList.add('holding');
-        this.button.style.backgroundColor = this.options.activeColor;
-        
-        // Enable targets for completion
-        this.updateTargets(true);
-        
-        console.log('Hold mode activated - you can now tap items to complete them');
+        // Dispatch custom event
+        const event = new CustomEvent('toggleComplete', { 
+            detail: { isActive: this.isActive } 
+        });
+        document.dispatchEvent(event);
     }
     
-    endHold(e) {
-        e.preventDefault();
-        
-        if (!this.isHolding) return;
-        
-        this.isHolding = false;
-        
-        // Visual feedback - button returns to normal
-        this.button.classList.remove('holding');
-        this.button.style.backgroundColor = '';
-        
-        // Disable targets for completion
-        this.updateTargets(false);
-        
-        console.log('Hold mode deactivated - tapping items will no longer complete them');
+    updateButton() {
+        const textElement = this.button.querySelector('.hold-text');
+        if (this.isActive) {
+            this.button.style.backgroundColor = this.options.activeColor;
+            this.button.style.transform = 'scale(0.95)';
+            if (textElement) textElement.textContent = 'Tap Chores to Complete';
+        } else {
+            this.button.style.backgroundColor = this.options.inactiveColor;
+            this.button.style.transform = '';
+            if (textElement) textElement.textContent = 'Hold to Complete';
+        }
     }
     
-    updateTargets(enable) {
+    updateTargets(isActive) {
         this.targets.forEach(target => {
-            if (enable) {
-                target.classList.add('update-mode');
+            if (isActive) {
+                target.classList.add('toggle-active');
                 target.style.cursor = 'pointer';
                 target.style.opacity = '0.8';
             } else {
-                target.classList.remove('update-mode');
+                target.classList.remove('toggle-active');
                 target.style.cursor = '';
                 target.style.opacity = '';
             }
         });
     }
     
+    setupTargetListeners() {
+        // Use event delegation for dynamically added elements
+        document.addEventListener('click', (e) => {
+            console.log('Click event detected, isActive:', this.isActive);
+            if (!this.isActive) return;
+            
+            const choreTile = e.target.closest('.chore-tile');
+            console.log('Chore tile found:', choreTile);
+            if (choreTile) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.handleChoreClick(choreTile);
+            }
+        });
+    }
+    
+    handleChoreClick(choreTile) {
+        console.log('Chore tile clicked:', choreTile);
+        const choreId = choreTile.dataset.choreId;
+        console.log('Chore ID from dataset:', choreId);
+        
+        if (choreId) {
+            console.log('Calling completeChore with ID:', choreId);
+            // Toggle chore completion
+            completeChore(parseInt(choreId));
+        } else {
+            console.log('No chore ID found in dataset');
+        }
+    }
+    
     // Method to update targets when new content is loaded
     updateTargetList() {
         this.targets = document.querySelectorAll(this.options.targetSelector || '.chore-tile, .todo-item');
-        this.updateTargets(this.isHolding);
+        this.updateTargets(this.isActive);
     }
 }
 
-// Initialize hold-to-complete for chores
-function initializeChoresHoldToComplete() {
-    const choresHoldToComplete = new HoldToComplete(
-        '#hold-button',
+// Initialize toggle-to-complete for chores
+function initializeChoresToggleToComplete() {
+    const choresToggleToComplete = new ToggleToComplete(
+        '#chores-hold-button',
         '.chore-tile',
         {
-            activeColor: '#4CAF50'
+            activeColor: '#4CAF50',
+            inactiveColor: '#2196F3'
         }
     );
     
-    // Handle completion
-    document.addEventListener('holdComplete', function(e) {
-        console.log('Hold to complete activated for chores');
+    // Store globally for access from other functions
+    window.choresToggleInstance = choresToggleToComplete;
+    
+    // Handle toggle events
+    document.addEventListener('toggleComplete', function(e) {
+        console.log('Toggle to complete activated for chores:', e.detail.isActive);
     });
 }
 
-// Initialize hold-to-complete for todos
-function initializeTodosHoldToComplete() {
-    const todosHoldToComplete = new HoldToComplete(
-        '#hold-button',
+// Initialize toggle-to-complete for todos
+function initializeTodosToggleToComplete() {
+    const todosToggleToComplete = new ToggleToComplete(
+        '#todos-hold-button',
         '.todo-item',
         {
-            activeColor: '#4CAF50'
+            activeColor: '#4CAF50',
+            inactiveColor: '#2196F3'
         }
     );
     
-    // Handle completion
-    document.addEventListener('holdComplete', function(e) {
-        console.log('Hold to complete activated for todos');
+    // Handle toggle events
+    document.addEventListener('toggleComplete', function(e) {
+        console.log('Toggle to complete activated for todos:', e.detail.isActive);
     });
 }
 
