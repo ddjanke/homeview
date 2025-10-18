@@ -166,8 +166,15 @@ body {
     line-height: 1;
 }
 
+.weather-high-low {
+    font-size: 1.2rem;
+    opacity: 0.7;
+    line-height: 1;
+    font-weight: 500;
+}
+
 .weather-desc {
-    font-size: 0.8rem;
+    font-size: 1.2rem;
     opacity: 0.8;
     line-height: 1;
 }
@@ -648,6 +655,13 @@ input:checked + .toggle-slider:before {
     border-color: #e0e0e0;
     opacity: 0.5;
     text-decoration: line-through;
+}
+
+.chore-tile.in-progress {
+    background: #e8f5e8;
+    border-color: #4caf50;
+    color: #2e7d32;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
 }
 
 .chore-tile.update-mode {
@@ -1416,6 +1430,10 @@ input:checked + .toggle-slider:before {
     
     .weather-temp {
         font-size: 1rem;
+    }
+    
+    .weather-high-low {
+        font-size: 1.2rem;
     }
     
     .weather-desc {

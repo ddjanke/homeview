@@ -9,6 +9,9 @@ const tabCache = {
     weather: { data: null, lastLoaded: null, autoRefreshInterval: null }
 };
 
+// Track in-progress chores (visual state only, not stored in database)
+let inProgressChores = new Set();
+
 // Auto-refresh interval (5 minutes)
 const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
@@ -226,11 +229,17 @@ function initializeWeatherWidget() {
                 if (data.success && data.weather) {
                     const weather = data.weather;
                     const tempElement = document.querySelector('.weather-temp');
+                    const highLowElement = document.querySelector('.weather-high-low');
                     const descElement = document.querySelector('.weather-desc');
                     const iconElement = document.querySelector('.weather-icon i');
                     
                     if (tempElement) {
                         tempElement.textContent = `${Math.round(weather.temp)}°`;
+                    }
+                    if (highLowElement) {
+                        const high = weather.high || Math.round(weather.temp);
+                        const low = weather.low || Math.round(weather.temp);
+                        highLowElement.textContent = `${high}° / ${low}°`;
                     }
                     if (descElement) {
                         descElement.textContent = weather.description || 'Clear';
@@ -805,6 +814,8 @@ function syncChores() {
         .then(data => {
             if (data.success) {
                 chores = data.chores || [];
+                // Clear in-progress state when syncing
+                inProgressChores.clear();
                 displayChores();
                 const count = chores.length;
                 showMessage(`Successfully synced ${count} chores from Google Sheets!`);
@@ -836,6 +847,8 @@ function resetChores() {
         .then(data => {
             if (data.success) {
                 chores = data.chores || [];
+                // Clear in-progress state when resetting
+                inProgressChores.clear();
                 displayChores();
                 showMessage('All chores reset successfully!');
             } else {
@@ -941,11 +954,6 @@ function displayChores() {
     // Filter chores based on toggle state
     let filteredChores = showAll ? getAllChoresSorted() : getTodayChores();
     
-    // Sort chores: incomplete first, then completed (moved to end)
-    filteredChores.sort((a, b) => {
-        if (a.completed === b.completed) return 0;
-        return a.completed ? 1 : -1; // incomplete first
-    });
     
     // Group chores by person
     const choresByPerson = {};
@@ -984,8 +992,23 @@ function createPersonRow(person, personChores) {
 }
 
 function createChoreTile(chore) {
-    const completedClass = chore.completed ? 'completed' : '';
-    const completedStyle = chore.completed ? 'style="opacity: 0.5; text-decoration: line-through;"' : '';
+    // Determine the state: incomplete, in-progress, or completed
+    const isInProgress = inProgressChores.has(chore.id);
+    const isCompleted = chore.completed;
+    
+    let stateClass = '';
+    let stateStyle = '';
+    
+    if (isCompleted) {
+        stateClass = 'completed';
+        stateStyle = 'style="opacity: 0.5; text-decoration: line-through;"';
+    } else if (isInProgress) {
+        stateClass = 'in-progress';
+        stateStyle = '';
+    } else {
+        stateClass = '';
+        stateStyle = '';
+    }
     
     // Use icon if available, otherwise show default icon
     let iconHtml = '';
@@ -1006,7 +1029,7 @@ function createChoreTile(chore) {
     }
     
     return `
-        <div class="chore-tile ${completedClass}" data-chore-id="${chore.id}" ${completedStyle} onclick="completeChore(${chore.id})">
+        <div class="chore-tile ${stateClass}" data-chore-id="${chore.id}" ${stateStyle} onclick="completeChore(${chore.id})">
             ${iconHtml}
             <div class="chore-content">
                 <div class="chore-name">${chore.name}</div>
@@ -1023,25 +1046,58 @@ function completeChore(choreId) {
         return;
     }
 
-    console.log('Found chore:', chore.name, 'Current completed status:', chore.completed);
+    console.log('Found chore:', chore.name, 'Current completed status:', chore.completed, 'In progress:', inProgressChores.has(choreId));
 
-    fetch(`/chores/api/chores/${choreId}/complete`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            console.log('API response:', data);
-            if (data.success) {
-                chore.completed = !chore.completed;
-                chore.completed_date = chore.completed ? new Date().toISOString() : null;
-                console.log('Chore updated, new status:', chore.completed);
-                displayChores();
-            } else {
-                showError('Failed to update chore: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error updating chore:', error);
-            showError('Error updating chore: ' + error.message);
-        });
+    // Handle three-state logic: incomplete -> in-progress -> completed
+    if (!chore.completed && !inProgressChores.has(choreId)) {
+        // First tap: incomplete -> in-progress (visual only)
+        inProgressChores.add(choreId);
+        console.log('Chore set to in-progress (visual only)');
+        displayChores();
+    } else if (!chore.completed && inProgressChores.has(choreId)) {
+        // Second tap: in-progress -> completed (database update)
+        inProgressChores.delete(choreId);
+        console.log('Chore set to completed (database update)');
+        
+        fetch(`/chores/api/chores/${choreId}/complete`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('API response:', data);
+                if (data.success) {
+                    chore.completed = true;
+                    chore.completed_date = new Date().toISOString();
+                    console.log('Chore updated to completed in database');
+                    displayChores();
+                } else {
+                    showError('Failed to update chore: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error updating chore:', error);
+                showError('Error updating chore: ' + error.message);
+            });
+    } else if (chore.completed) {
+        // Third tap: completed -> incomplete (database update)
+        console.log('Chore set to incomplete (database update)');
+        
+        fetch(`/chores/api/chores/${choreId}/complete`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                console.log('API response:', data);
+                if (data.success) {
+                    chore.completed = false;
+                    chore.completed_date = null;
+                    console.log('Chore updated to incomplete in database');
+                    displayChores();
+                } else {
+                    showError('Failed to update chore: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error updating chore:', error);
+                showError('Error updating chore: ' + error.message);
+            });
+    }
 }
 
 // Todos functions

@@ -12,8 +12,9 @@ class WeatherService:
         self.location = Config.WEATHER_LOCATION
 
     def get_current_weather(self):
-        """Get current weather conditions."""
+        """Get current weather conditions with today's high/low."""
         try:
+            # Get current weather
             url = f"{self.base_url}/weather"
             params = {
                 "lat": self.location["lat"],
@@ -24,8 +25,22 @@ class WeatherService:
 
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
-
             data = response.json()
+
+            # Get today's forecast for high/low
+            forecast_url = f"{self.base_url}/forecast"
+            forecast_response = requests.get(forecast_url, params=params, timeout=10)
+            forecast_response.raise_for_status()
+            forecast_data = forecast_response.json()
+
+            # Calculate today's high/low from forecast
+            today = datetime.now().strftime("%Y-%m-%d")
+            today_temps = []
+            
+            for item in forecast_data["list"]:
+                item_date = datetime.fromtimestamp(item["dt"]).strftime("%Y-%m-%d")
+                if item_date == today:
+                    today_temps.append(item["main"]["temp"])
 
             current_weather = {
                 "temp": round(data["main"]["temp"]),
@@ -36,6 +51,8 @@ class WeatherService:
                 "humidity": data["main"]["humidity"],
                 "wind_speed": data["wind"]["speed"],
                 "icon": self._get_weather_icon(data["weather"][0]["icon"]),
+                "high": round(max(today_temps)) if today_temps else round(data["main"]["temp"]),
+                "low": round(min(today_temps)) if today_temps else round(data["main"]["temp"]),
                 "last_updated": datetime.utcnow().isoformat(),
             }
 
