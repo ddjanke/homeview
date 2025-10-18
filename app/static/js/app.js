@@ -420,8 +420,6 @@ function setupChoresRefresh() {
         });
     }
     
-    // Set up toggle-to-complete functionality
-    initializeChoresToggleToComplete();
     
     // Set up auto-refresh interval
     if (tabCache.chores.autoRefreshInterval) {
@@ -464,8 +462,6 @@ function setupTodosRefresh() {
         addBtn.addEventListener('click', addTodo);
     }
     
-    // Set up toggle-to-complete functionality
-    initializeTodosToggleToComplete();
     
     // Set up auto-refresh interval
     if (tabCache.todos.autoRefreshInterval) {
@@ -1010,7 +1006,7 @@ function createChoreTile(chore) {
     }
     
     return `
-        <div class="chore-tile ${completedClass}" data-chore-id="${chore.id}" ${completedStyle}>
+        <div class="chore-tile ${completedClass}" data-chore-id="${chore.id}" ${completedStyle} onclick="completeChore(${chore.id})">
             ${iconHtml}
             <div class="chore-content">
                 <div class="chore-name">${chore.name}</div>
@@ -1212,7 +1208,7 @@ function createTodoItem(todo) {
     const priorityClass = `priority-${todo.priority}`;
     
     return `
-        <div class="todo-item ${completedClass} ${priorityClass}" data-todo-id="${todo.id}">
+        <div class="todo-item ${completedClass} ${priorityClass}" data-todo-id="${todo.id}" onclick="completeTodo(${todo.id})">
             <div class="todo-content">
                 <div class="todo-title">${todo.title}</div>
                 <div class="todo-priority">${todo.priority}</div>
@@ -1438,166 +1434,4 @@ function setTheme(theme) {
     }
 }
 
-// Toggle-to-complete functionality
-class ToggleToComplete {
-    constructor(buttonSelector, targetSelector, options = {}) {
-        this.button = document.querySelector(buttonSelector);
-        this.targets = document.querySelectorAll(targetSelector);
-        this.options = {
-            activeColor: '#4CAF50',
-            inactiveColor: '#2196F3',
-            autoToggleOffDelay: 30000, // 30 seconds
-            ...options
-        };
-        
-        this.isActive = false;
-        this.autoToggleTimer = null;
-        
-        this.init();
-    }
-    
-    init() {
-        if (!this.button) return;
-        
-        // Add click event listener
-        this.button.addEventListener('click', this.toggle.bind(this));
-        
-        // Add event listeners for target clicks
-        this.setupTargetListeners();
-    }
-    
-    toggle() {
-        console.log('Toggle button clicked, current state:', this.isActive);
-        this.isActive = !this.isActive;
-        console.log('New toggle state:', this.isActive);
-        
-        this.updateButton();
-        this.updateTargets(this.isActive);
-        
-        if (this.isActive) {
-            // Set auto-toggle-off timer
-            this.autoToggleTimer = setTimeout(() => {
-                this.isActive = false;
-                this.updateButton();
-                this.updateTargets(false);
-                this.autoToggleTimer = null;
-                console.log('Toggle mode auto-deactivated after 30 seconds');
-            }, this.options.autoToggleOffDelay);
-            console.log('Toggle mode activated - tap chores to complete them');
-        } else {
-            // Clear timer if manually toggled off
-            if (this.autoToggleTimer) {
-                clearTimeout(this.autoToggleTimer);
-                this.autoToggleTimer = null;
-            }
-            console.log('Toggle mode deactivated');
-        }
-        
-        // Dispatch custom event
-        const event = new CustomEvent('toggleComplete', { 
-            detail: { isActive: this.isActive } 
-        });
-        document.dispatchEvent(event);
-    }
-    
-    updateButton() {
-        const textElement = this.button.querySelector('.hold-text');
-        if (this.isActive) {
-            this.button.style.backgroundColor = this.options.activeColor;
-            this.button.style.transform = 'scale(0.95)';
-            if (textElement) textElement.textContent = 'Tap Chores to Complete';
-        } else {
-            this.button.style.backgroundColor = this.options.inactiveColor;
-            this.button.style.transform = '';
-            if (textElement) textElement.textContent = 'Hold to Complete';
-        }
-    }
-    
-    updateTargets(isActive) {
-        this.targets.forEach(target => {
-            if (isActive) {
-                target.classList.add('toggle-active');
-                target.style.cursor = 'pointer';
-                target.style.opacity = '0.8';
-            } else {
-                target.classList.remove('toggle-active');
-                target.style.cursor = '';
-                target.style.opacity = '';
-            }
-        });
-    }
-    
-    setupTargetListeners() {
-        // Use event delegation for dynamically added elements
-        document.addEventListener('click', (e) => {
-            console.log('Click event detected, isActive:', this.isActive);
-            if (!this.isActive) return;
-            
-            const choreTile = e.target.closest('.chore-tile');
-            console.log('Chore tile found:', choreTile);
-            if (choreTile) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.handleChoreClick(choreTile);
-            }
-        });
-    }
-    
-    handleChoreClick(choreTile) {
-        console.log('Chore tile clicked:', choreTile);
-        const choreId = choreTile.dataset.choreId;
-        console.log('Chore ID from dataset:', choreId);
-        
-        if (choreId) {
-            console.log('Calling completeChore with ID:', choreId);
-            // Toggle chore completion
-            completeChore(parseInt(choreId));
-        } else {
-            console.log('No chore ID found in dataset');
-        }
-    }
-    
-    // Method to update targets when new content is loaded
-    updateTargetList() {
-        this.targets = document.querySelectorAll(this.options.targetSelector || '.chore-tile, .todo-item');
-        this.updateTargets(this.isActive);
-    }
-}
-
-// Initialize toggle-to-complete for chores
-function initializeChoresToggleToComplete() {
-    const choresToggleToComplete = new ToggleToComplete(
-        '#chores-hold-button',
-        '.chore-tile',
-        {
-            activeColor: '#4CAF50',
-            inactiveColor: '#2196F3'
-        }
-    );
-    
-    // Store globally for access from other functions
-    window.choresToggleInstance = choresToggleToComplete;
-    
-    // Handle toggle events
-    document.addEventListener('toggleComplete', function(e) {
-        console.log('Toggle to complete activated for chores:', e.detail.isActive);
-    });
-}
-
-// Initialize toggle-to-complete for todos
-function initializeTodosToggleToComplete() {
-    const todosToggleToComplete = new ToggleToComplete(
-        '#todos-hold-button',
-        '.todo-item',
-        {
-            activeColor: '#4CAF50',
-            inactiveColor: '#2196F3'
-        }
-    );
-    
-    // Handle toggle events
-    document.addEventListener('toggleComplete', function(e) {
-        console.log('Toggle to complete activated for todos:', e.detail.isActive);
-    });
-}
 

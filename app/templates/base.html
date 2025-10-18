@@ -62,10 +62,6 @@
         </nav>
     </div>
 
-    <!-- Hold-to-Complete Button -->
-    <div id="hold-button" class="hold-button hidden">
-        <span class="hold-text">Hold to Complete</span>
-    </div>
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay hidden">
@@ -74,7 +70,6 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/hold-to-complete.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
