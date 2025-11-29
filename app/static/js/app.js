@@ -650,6 +650,7 @@ function displayWeatherData(weatherData) {
 
 function getWeatherIcon(iconName) {
     // Map custom weather icon names to Font Awesome icons
+    // This is used for current weather and can show moons for nighttime
     const iconMap = {
         'sunny': 'fa-sun',
         'clear-night': 'fa-moon',
@@ -664,12 +665,30 @@ function getWeatherIcon(iconName) {
     return iconMap[iconName] || 'fa-cloud-sun';
 }
 
+function getForecastIcon(iconName) {
+    // Map custom weather icon names to Font Awesome icons for forecast
+    // Always uses daytime symbols (suns, not moons) for forecast items
+    const iconMap = {
+        'sunny': 'fa-sun',
+        'clear-night': 'fa-sun',  // Convert night to day
+        'partly-cloudy': 'fa-cloud-sun',
+        'partly-cloudy-night': 'fa-cloud-sun',  // Convert night to day
+        'cloudy': 'fa-cloud',
+        'rainy': 'fa-cloud-rain',
+        'thunderstorm': 'fa-bolt',
+        'snowy': 'fa-snowflake',
+        'foggy': 'fa-smog'
+    };
+    return iconMap[iconName] || 'fa-cloud-sun';
+}
+
 function createForecastItem(day) {
     const item = document.createElement('div');
     item.className = 'forecast-item';
     
     const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' });
-    const iconClass = getWeatherIcon(day.icon);
+    // Use getForecastIcon to always show daytime symbols (suns, not moons)
+    const iconClass = getForecastIcon(day.icon);
     
     // Add safety checks for undefined values
     const highTemp = day.high !== undefined ? Math.round(day.high) : '--';
@@ -871,17 +890,38 @@ function getTodayChores() {
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const todayName = dayNames[dayOfWeek];
     
-    return chores.filter(chore => {
-        // Show daily chores
-        if (chore.frequency.toLowerCase() === 'daily') {
+    const filtered = chores.filter(chore => {
+        // Normalize frequency - lowercase and trim, handle any whitespace or null values
+        const frequency = String(chore.frequency || '').toLowerCase().trim();
+        
+        // Show daily chores - ALWAYS include them in "Show Today Only" mode
+        // Check for "daily" (exact match after normalization)
+        if (frequency === 'daily') {
             return true;
         }
+        
+        // Handle null/undefined frequency for non-daily chores
+        if (!chore.frequency || !frequency) {
+            return false;
+        }
+        
         // Show weekly chores for today's day of week
-        if (chore.frequency.toLowerCase() === 'weekly' && chore.day_of_week === todayName) {
+        // Normalize day_of_week comparison (handle case sensitivity)
+        const choreDay = String(chore.day_of_week || '').trim();
+        if (frequency === 'weekly' && choreDay.toLowerCase() === todayName.toLowerCase()) {
             return true;
         }
+        
         return false;
     });
+    
+    const dailyCount = filtered.filter(c => {
+        const freq = String(c.frequency || '').toLowerCase().trim();
+        return freq === 'daily';
+    }).length;
+    const weeklyCount = filtered.length - dailyCount;
+    console.log(`getTodayChores: Found ${filtered.length} chores for ${todayName} (${dailyCount} daily, ${weeklyCount} weekly, ${chores.length} total)`);
+    return filtered;
 }
 
 function getAllChoresSorted() {
@@ -891,14 +931,18 @@ function getAllChoresSorted() {
     
     // Create a copy of chores and sort them
     const sortedChores = [...chores].sort((a, b) => {
+        // Normalize frequencies safely
+        const aFreq = String(a.frequency || '').toLowerCase().trim();
+        const bFreq = String(b.frequency || '').toLowerCase().trim();
+        
         // First, sort by frequency (daily first, then weekly)
-        if (a.frequency.toLowerCase() !== b.frequency.toLowerCase()) {
-            if (a.frequency.toLowerCase() === 'daily') return -1;
-            if (b.frequency.toLowerCase() === 'daily') return 1;
+        if (aFreq !== bFreq) {
+            if (aFreq === 'daily') return -1;
+            if (bFreq === 'daily') return 1;
         }
         
         // For weekly chores, sort by day of week starting from today
-        if (a.frequency.toLowerCase() === 'weekly' && b.frequency.toLowerCase() === 'weekly') {
+        if (aFreq === 'weekly' && bFreq === 'weekly') {
             const aDayIndex = dayNames.indexOf(a.day_of_week);
             const bDayIndex = dayNames.indexOf(b.day_of_week);
             
@@ -910,8 +954,8 @@ function getAllChoresSorted() {
         }
         
         // If one is daily and one is weekly, daily comes first
-        if (a.frequency === 'daily') return -1;
-        if (b.frequency === 'daily') return 1;
+        if (aFreq === 'daily') return -1;
+        if (bFreq === 'daily') return 1;
         
         return 0;
     });

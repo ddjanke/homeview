@@ -22,18 +22,26 @@ class GoogleAuthService:
                     self.token_file, self.scopes
                 )
 
-                # If credentials are expired but have refresh token, try to refresh
-                if creds and creds.expired and creds.refresh_token:
-                    try:
-                        creds.refresh(Request())
-                        # Save refreshed credentials
-                        with open(self.token_file, "w") as token:
-                            token.write(creds.to_json())
-                    except Exception as e:
-                        print(f"Failed to refresh credentials: {e}")
+                # If credentials are expired, try to refresh if refresh_token exists
+                if creds and creds.expired:
+                    if creds.refresh_token:
+                        try:
+                            creds.refresh(Request())
+                            # Save refreshed credentials
+                            with open(self.token_file, "w") as token:
+                                token.write(creds.to_json())
+                        except Exception as e:
+                            print(f"Failed to refresh credentials: {e}")
+                            creds = None
+                    else:
+                        # No refresh_token available - credentials need to be re-authorized
+                        print("Credentials expired and no refresh_token available. Re-authentication required.")
                         creds = None
             except Exception as e:
                 print(f"Failed to load credentials: {e}")
+                # If the error is about missing refresh_token, provide helpful message
+                if "refresh_token" in str(e).lower():
+                    print("Token file is missing refresh_token. Please re-authenticate at /auth/login")
                 creds = None
 
         return creds

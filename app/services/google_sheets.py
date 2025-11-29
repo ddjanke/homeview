@@ -65,14 +65,62 @@ class GoogleSheetsService:
 
             # Add new chores
             for i, row in enumerate(chores_data):
-                if len(row) >= 4:  # Ensure we have enough columns
-                    chore_name = row[0]
+                # Require at least 3 columns: Name, Assigned To, Frequency
+                # Day and Icon are optional (daily chores may not have a day)
+                if len(row) >= 3:
+                    chore_name = row[0] if row[0] else None
+                    assigned_to = row[1] if len(row) > 1 and row[1] else None
+
+                    # Skip rows with missing essential data
+                    if not chore_name or not assigned_to:
+                        print(f"Skipping row {i+2}: missing name or assigned_to")
+                        continue
+
+                    # Normalize frequency to lowercase and trim whitespace
+                    frequency = (
+                        row[2].strip().lower() if len(row) > 2 and row[2] else None
+                    )
+
+                    if not frequency:
+                        print(f"Skipping row {i+2}: missing frequency")
+                        continue
+
+                    # Normalize day_of_week - convert to full day name if needed
+                    # Daily chores may not have a day_of_week column
+                    day_of_week = None
+                    if len(row) > 3 and row[3]:
+                        day_str = row[3].strip()
+                        if day_str:  # Only process if day is not empty
+                            # Map common abbreviations to full day names
+                            day_map = {
+                                "su": "Sunday",
+                                "sun": "Sunday",
+                                "m": "Monday",
+                                "mon": "Monday",
+                                "tu": "Tuesday",
+                                "tue": "Tuesday",
+                                "tues": "Tuesday",
+                                "w": "Wednesday",
+                                "wed": "Wednesday",
+                                "th": "Thursday",
+                                "thu": "Thursday",
+                                "thur": "Thursday",
+                                "f": "Friday",
+                                "fri": "Friday",
+                                "sa": "Saturday",
+                                "sat": "Saturday",
+                            }
+                            day_lower = day_str.lower()
+                            day_of_week = day_map.get(
+                                day_lower, day_str
+                            )  # Use mapping or original if not found
+
                     chore = Chore(
                         name=chore_name,
-                        assigned_to=row[1],
-                        frequency=row[2],
-                        day_of_week=row[3] if len(row) > 3 else None,
-                        icon_name=row[4] if len(row) > 4 else None,
+                        assigned_to=assigned_to,
+                        frequency=frequency,
+                        day_of_week=day_of_week,
+                        icon_name=row[4] if len(row) > 4 and row[4] else None,
                         google_sheet_row=i
                         + 2,  # +2 because of header and 0-based indexing
                     )

@@ -33,8 +33,11 @@ def login():
         flow.redirect_uri = url_for("auth.callback", _external=True)
 
         # Get authorization URL
+        # Use prompt="consent" to force re-authorization and get refresh_token
         authorization_url, state = flow.authorization_url(
-            access_type="offline", include_granted_scopes="true"
+            access_type="offline",
+            include_granted_scopes="true",
+            prompt="consent"  # Force consent screen to get refresh_token
         )
 
         # Store state in session
@@ -80,8 +83,13 @@ def callback():
         token_file = "credentials/token.json"
         os.makedirs(os.path.dirname(token_file), exist_ok=True)
 
+        # Save credentials with refresh_token if available
         with open(token_file, "w") as token:
             token.write(credentials.to_json())
+        
+        # Log if refresh_token is missing (for debugging)
+        if not credentials.refresh_token:
+            print("Warning: No refresh_token received. Token will expire and require re-authentication.")
 
         # Clear session state
         session.pop("oauth_state", None)
